@@ -58,4 +58,3 @@ if [ "${pr_action}" == "closed" -a "${pr_merge_status}" == "true"  ] ; then
 else
   rm -f deploy.vars
 fi
-
