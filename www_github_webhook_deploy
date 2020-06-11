@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# This script is designed to be run as a part of the www_librarywebsite_prwebhooks
+# Jenkins job to trigger deployment of the main library website code to the appropriate
+# server environment.
+#
+# When a GitHub Pull Request (PR) is opened, updated, or closed, a webhook is sent to the
+# Jenkins job. This webhook contains a payload of json data stored in ${payload}.
+#
+# Based on the content of the payload data, this script will set the ${APP_ENV}
+# enviornment variable to the appropriate value. This value is then passed along to
+# the www_library_drupaldeploy Jenkins job initiate a deployment.
+#
+# Does NOT Trigger a Deploy:
+# - If the PR action is OPEN
+# - If the PR action is SYNCHORNIZED
+# - If the PR action is CLOSED with a merge status of FALSE
+#
+# Deploy Is Triggered:
+# - If the PR action is CLOSED with a merge status of TRUE
+#   In this case, ${APP_ENV} is set to the appropriate main library website environment
+#   based on the branch the PR is coming FROM and the branch the PR is merging in TO.
+#   * If the PR is merging into MASTER - then we are deploying to `test_www`
+#   * If the PR is merging into STAGE - then we are deploying to `stage_www`
+#
+#   When ${APP_ENV} is set, a deploy.vars file is saved to the Jenkins job workspace.
+#   The variable assignments stored in this file are passed along to the triggered
+#   Jenkins job that handles the main library website code deployment.
+#
+
+# Extract elements from the Pull Request Webhook payload from GitHub
+pr_content=($(echo "${payload}" | jq .action,.pull_request.head.ref,.pull_request.base.ref,.pull_request.merged))
+# The Pull Request Action (e.g. opened, closed, synchornized, etc.)
+pr_action=$(echo ${pr_content[0]} | xargs)
+# The branch the Pull Request is coming FROM
+pr_head_branch=$(echo ${pr_content[1]} | xargs)
+# The branch the Pull Request is going TO
+pr_base_branch=$(echo ${pr_content[2]} | xargs)
+# The status of the Pull Request merge (e.g. true or false)
+pr_merge_status=$(echo ${pr_content[3]} | xargs)
+
+if [ "${pr_action}" == "closed" -a "${pr_merge_status}" == "true"  ] ; then
+  if [ "${pr_base_branch}" == "master" ] ; then
+    # Deploy to TEST
+    APP_ENV="test_www"
+    echo "Pull Request from ${pr_head_branch} was merged into ${pr_base_branch}"
+    echo "Deploying to ${APP_ENV} environment"
+    echo "APP_ENV=${APP_ENV}" > deploy.vars
+  elif [ "${pr_base_branch}" == "staging" ] ; then
+    # Deploy to STAGE
+    APP_ENV="stage_www"
+    echo "Pull Request from ${pr_head_branch} was merged into ${pr_base_branch}"
+    echo "Deploying to ${APP_ENV} environment"
+    echo "APP_ENV=${APP_ENV}" > deploy.vars
+  else
+    exit 1
+  fi
+else
+  rm -f deploy.vars
+fi
+
