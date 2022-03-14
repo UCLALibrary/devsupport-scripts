@@ -11,7 +11,7 @@ SOLR_CORE="shoreline"
 SOLR_CORE_CONF_DIR="${SOLR_DATA_DIR}/${SOLR_CORE}/conf"
 
 GIT_REPO_URL="https://gitlab.com/surfliner/surfliner.git"
-GIT_REPO_SOLR_CONF_PATH="shoreline/discovery/solr/conf"
+GIT_REPO_SOLR_CONF_PATH="shoreline/solr/conf"
 GIT_REPO_CLONE_PATH="/opt/surfliner"
 
 # Clone git repo to local server
