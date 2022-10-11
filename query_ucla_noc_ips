@@ -1,0 +1,52 @@
+#!/bin/bash
+
+NOC_URL='https://www.noc.ucla.edu/networks.php'
+ACTION='null'
+DEPT_ID='null'
+
+function USAGE() {
+  echo -e "\nUsage: `basename $0` [ -l | -d [DEPARTMENT_ID] ]"
+  echo -e "-l         --> List all departments and associated IDs"
+  echo -e "-d ID      --> Query department networks by ID"
+}
+
+# List Departments
+function listdepts(){
+  curl -s -X POST ${NOC_URL} -H 'Content-Type: application/x-www-form-urlencoded' -d 'action=departmentlist' | jq -r '.departmentlist[]'
+}
+
+# List Department IPs
+function querydept(){
+  curl -s -X POST ${NOC_URL} -H 'Content-Type: application/x-www-form-urlencoded' -d "action=networklist&department_id=${DEPT_ID}" | jq -r '.networklist[].network' 
+}
+
+while getopts ":ld:" OPT ; do
+  case $OPT in
+    l) 
+      ACTION='list'
+      listdepts
+      ;;
+    d)
+      ACTION='query'
+      DEPT_ID="$OPTARG"
+      querydept
+      ;;
+    \?)
+      echo -e "\nInvalid option: -$OPTARG" >&2
+      USAGE
+      exit 1
+      ;;
+    :)
+      echo -e "\nOption -$OPTARG requires an argument" >&2
+      USAGE
+      exit 1
+      ;;
+  esac
+done
+
+for VAR in $ACTION ; do
+  if [ "$VAR" = "null" ] ; then
+    USAGE
+    exit 1
+  fi
+done
