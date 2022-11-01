@@ -12,11 +12,15 @@ function USAGE() {
 
 # List Departments
 function listdepts(){
+  # Get listing of all department names and associated IDs
   curl -s -X POST ${NOC_URL} -H 'Content-Type: application/x-www-form-urlencoded' -d 'action=departmentlist' | jq -r '.departmentlist[]'
 }
 
 # List Department IPs
 function querydept(){
+  # Get the name of the department using the provided department ID
+  curl -s -X POST ${NOC_URL} -H 'Content-Type: application/x-www-form-urlencoded' -d 'action=departmentlist' | jq -r ".departmentlist[] | select(.department_id==\"${DEPT_ID}\") | .department"
+  # Get the department's IP addresses
   curl -s -X POST ${NOC_URL} -H 'Content-Type: application/x-www-form-urlencoded' -d "action=networklist&department_id=${DEPT_ID}" | jq -r '.networklist[].network' 
 }
 
