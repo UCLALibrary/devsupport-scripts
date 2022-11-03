@@ -5,7 +5,7 @@ ACTION='null'
 DEPT_ID='null'
 
 function USAGE() {
-  echo -e "\nUsage: `basename $0` [ -l | -d [DEPARTMENT_ID] ]"
+  echo -e "\nUsage: $(basename "$0") [ -l | -d [DEPARTMENT_ID] ]"
   echo -e "-l         --> List all departments and associated IDs"
   echo -e "-d ID      --> Query department networks by ID"
 }
