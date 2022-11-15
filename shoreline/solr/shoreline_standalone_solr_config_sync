@@ -27,7 +27,7 @@ GIT_SOLR_MD5=$(find ${GIT_REPO_CLONE_PATH}/${GIT_REPO_SOLR_CONF_PATH} -type f -e
 LOCAL_SOLR_MD5=$(find ${SOLR_CORE_CONF_DIR} -type f -exec md5sum {} + | awk '{print $1}' | LC_ALL=C sort -k 2 | md5sum | awk '{print $1}')
 
 # If MD5 hashes do not match, then solr config files need to be synchronized
-if [[ "${GIT_SOLR_MD5}" != "${LOCAL_SOLR_MD5}" ]] ; then
+if [[ ${GIT_SOLR_MD5} != ${LOCAL_SOLR_MD5} ]] ; then
   rsync -a --delete ${GIT_REPO_CLONE_PATH}/${GIT_REPO_SOLR_CONF_PATH}/ ${SOLR_CORE_CONF_DIR}/
   chown -R solr:solr ${SOLR_CORE_CONF_DIR}/
   /etc/init.d/solr restart
