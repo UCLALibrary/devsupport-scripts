@@ -1,0 +1,48 @@
+#!/bin/bash
+
+##################
+# The purpose of this script is to delete all versions of an
+# existing helm chart in a Chartmuseum repository using the
+# Chartmuseum API via the curl command.
+#
+# The host you run this script on must have:
+#   - an enviroment variable named CM_BASIC_AUTH for the Chartmuesum's Basic Auth password (base64 encoded)
+#   - jq and curl packages installed
+#################
+
+CM_BASE_URL="https://chartmuseum.library.ucla.edu"
+CHART_NAME="$1"
+JQ_PATH="$(type -p jq)"
+CURL_PATH="$(type -p curl)"
+
+USAGE() {
+  echo "You must specify a chart name to delete"
+  echo -e "\nUsage: `basename $0` CHARTNAME\n"
+}
+
+if [[ -z ${JQ_PATH} ]] ; then
+  echo "The jq package must be installed to run this script"
+  exit 1
+fi
+
+if [[ -z ${CURL_PATH} ]] ; then
+  echo "The curl package must be installed to run this script"
+  exit 1
+fi
+
+if [[ -z $1 ]] ; then
+  USAGE
+  exit 1
+fi
+
+# Get all versions of $CHART_NAME
+CHART_VERSIONS=$(curl -s ${CM_BASE_URL}/api/charts/${CHART_NAME} | ${JQ_PATH} -r '.[].version')
+
+# Delete all versions of chart
+# CM_BASIC_AUTH is an env var on the local system
+for version in $(echo ${CHART_VERSIONS})
+do
+  echo "Deleting chart version: ${version}"
+  curl -s -X DELETE -H "Authorization: Basic ${CM_BASIC_AUTH}" ${CM_BASE_URL}/api/charts/${CHART_NAME}/${version}
+  echo ""
+done
